@@ -60,11 +60,12 @@ export default function CompleteProfile() {
         purpose: data.purpose || undefined
       };
 
+      // Use createProfile which now handles upsert internally
       const { error } = await profiles.createProfile(user.id, profileData);
 
       if (error) {
         toast({
-          title: 'Profile creation failed',
+          title: 'Profile setup failed',
           description: error.message,
           variant: 'destructive'
         });
@@ -78,7 +79,7 @@ export default function CompleteProfile() {
       }
     } catch (error: any) {
       toast({
-        title: 'Profile creation failed',
+        title: 'Profile setup failed',
         description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive'
       });

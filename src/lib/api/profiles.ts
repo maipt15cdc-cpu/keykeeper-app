@@ -45,13 +45,15 @@ export const profiles = {
     return { data, error };
   },
 
-  // Create profile
+  // Create or update profile (upsert)
   async createProfile(userId: string, profileData: ProfileCreateData) {
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         user_id: userId,
         ...profileData
+      }, { 
+        onConflict: 'user_id'
       })
       .select()
       .single();
