@@ -22,6 +22,8 @@ import VaultDetail from './pages/VaultDetail';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import NotFound from "./pages/NotFound";
+import InvitationAccept from './pages/InvitationAccept';
+import ShareAccess from './pages/ShareAccess';
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,27 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user && profile) {
+      navigate('/dashboard');
+    }
+  }, [user, profile, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -63,11 +86,15 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Auth routes */}
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
+            <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+            <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
+            
+            {/* Public routes */}
+            <Route path="/invitations/accept" element={<InvitationAccept />} />
+            <Route path="/share/:token" element={<ShareAccess />} />
             
             {/* Protected routes */}
             <Route path="/" element={
