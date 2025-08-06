@@ -57,7 +57,7 @@ export function VaultInvitationsTab({ vaultId, canManage }: VaultInvitationsTabP
           variant: 'destructive'
         });
       } else {
-        setInvitations(data || []);
+        setInvitations((data || []) as VaultInvitation[]);
       }
     } catch (error: any) {
       toast({
@@ -74,7 +74,8 @@ export function VaultInvitationsTab({ vaultId, canManage }: VaultInvitationsTabP
     setSubmitting(true);
     try {
       const { data: invitation, error } = await vaultInvitations.createInvitation({
-        ...data,
+        email: data.email,
+        role: data.role,
         vault_id: vaultId
       });
 
