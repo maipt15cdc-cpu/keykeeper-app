@@ -214,11 +214,17 @@ export default function VaultDetail() {
             {canManageVault && (
               <>
                 <TabsContent value="invitations" className="space-y-6">
-                  <VaultInvitationsTab vaultId={vault.id} />
+                  <VaultInvitationsTab 
+                    vaultId={vault.id} 
+                    canManage={canManageVault}
+                  />
                 </TabsContent>
 
                 <TabsContent value="sharing" className="space-y-6">
-                  <VaultShareLinksTab vaultId={vault.id} />
+                  <VaultShareLinksTab 
+                    vaultId={vault.id} 
+                    canManage={canManageVault}
+                  />
                 </TabsContent>
               </>
             )}
