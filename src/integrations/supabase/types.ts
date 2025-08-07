@@ -262,6 +262,10 @@ export type Database = {
           owner_id: string
         }[]
       }
+      increment_share_link_views: {
+        Args: { link_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
