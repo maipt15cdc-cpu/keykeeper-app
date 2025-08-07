@@ -13,6 +13,7 @@ interface SharedVaultItem {
   id: string;
   title: string;
   username: string | null;
+  password: string;
   notes: string | null;
   tags: string[] | null;
   created_at: string;
@@ -239,6 +240,30 @@ export default function ShareAccess() {
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground min-w-0 flex-shrink-0 w-20">Username:</span>
                         <span className="font-mono">{item.username}</span>
+                      </div>
+                    )}
+                    
+                    {item.password && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground min-w-0 flex-shrink-0 w-20">Password:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">
+                            {showPasswords[item.id] ? item.password : maskPassword(item.password)}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => togglePasswordVisibility(item.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            {showPasswords[item.id] ? (
+                              <EyeOff className="h-3 w-3" />
+                            ) : (
+                              <Eye className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     )}
                     

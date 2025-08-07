@@ -149,7 +149,7 @@ export const vaultShareLinks = {
   async getSharedVaultItems(vaultId: string) {
     const { data, error } = await supabase
       .from('vault_items')
-      .select('id, title, username, notes, tags, created_at')
+      .select('id, title, username, password, notes, tags, created_at')
       .eq('vault_id', vaultId)
       .order('created_at', { ascending: false });
     

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Mail, Clock, Check, X, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,11 +8,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { vaultInvitations, VaultInvitation } from '@/lib/api/vault-invitations';
+import { useVaultInvitations } from '@/hooks/useVaultInvitations';
+import { VaultInvitation } from '@/lib/api/vault-invitations';
 
 const invitationSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -27,13 +27,11 @@ interface VaultInvitationsTabProps {
 }
 
 export function VaultInvitationsTab({ vaultId, canManage }: VaultInvitationsTabProps) {
-  const [invitations, setInvitations] = useState<VaultInvitation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { invitations, loading, createInvitation, revokeInvitation } = useVaultInvitations(vaultId);
 
   const form = useForm<InvitationFormData>({
     resolver: zodResolver(invitationSchema),
@@ -43,95 +41,27 @@ export function VaultInvitationsTab({ vaultId, canManage }: VaultInvitationsTabP
     }
   });
 
-  useEffect(() => {
-    loadInvitations();
-  }, [vaultId]);
-
-  const loadInvitations = async () => {
-    try {
-      const { data, error } = await vaultInvitations.getVaultInvitations(vaultId);
-      if (error) {
-        toast({
-          title: 'Failed to load invitations',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        setInvitations((data || []) as VaultInvitation[]);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to load invitations',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onSubmit = async (data: InvitationFormData) => {
     setSubmitting(true);
-    try {
-      const { data: invitation, error } = await vaultInvitations.createInvitation({
-        email: data.email,
-        role: data.role,
-        vault_id: vaultId
-      });
+    const result = await createInvitation({
+      email: data.email,
+      role: data.role,
+      vault_id: vaultId
+    });
 
-      if (error) {
-        toast({
-          title: 'Failed to send invitation',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Invitation sent',
-          description: `Invitation sent to ${data.email}`
-        });
-        form.reset();
-        setDialogOpen(false);
-        loadInvitations();
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to send invitation',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    } finally {
-      setSubmitting(false);
+    if (result.success) {
+      form.reset();
+      setDialogOpen(false);
     }
+    setSubmitting(false);
   };
 
   const handleRevoke = async (invitationId: string) => {
-    try {
-      const { error } = await vaultInvitations.revokeInvitation(invitationId);
-      if (error) {
-        toast({
-          title: 'Failed to revoke invitation',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Invitation revoked',
-          description: 'The invitation has been revoked'
-        });
-        loadInvitations();
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to revoke invitation',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    }
+    await revokeInvitation(invitationId);
   };
 
   const copyInvitationLink = (token: string) => {
-    const inviteUrl = `${window.location.origin}/invitation/accept?token=${token}`;
+    const inviteUrl = `${window.location.origin}/invitations/accept?token=${token}`;
     navigator.clipboard.writeText(inviteUrl);
     toast({
       title: 'Invitation link copied',

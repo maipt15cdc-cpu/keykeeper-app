@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Share2, Copy, Trash2, Eye, Calendar, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { vaultShareLinks, VaultShareLink } from '@/lib/api/vault-share-links';
+import { useVaultShareLinks } from '@/hooks/useVaultShareLinks';
+import { VaultShareLink } from '@/lib/api/vault-share-links';
 
 const shareLinkSchema = z.object({
   expires_at: z.string().optional(),
@@ -31,12 +31,11 @@ interface VaultShareLinksTabProps {
 }
 
 export function VaultShareLinksTab({ vaultId, canManage }: VaultShareLinksTabProps) {
-  const [shareLinks, setShareLinks] = useState<VaultShareLink[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { toast } = useToast();
+  const { shareLinks, loading, createShareLink, revokeShareLink } = useVaultShareLinks(vaultId);
 
   const form = useForm<ShareLinkFormData>({
     resolver: zodResolver(shareLinkSchema),
@@ -51,101 +50,32 @@ export function VaultShareLinksTab({ vaultId, canManage }: VaultShareLinksTabPro
   const hasViewLimit = form.watch('has_view_limit');
   const hasPasscode = form.watch('has_passcode');
 
-  useEffect(() => {
-    loadShareLinks();
-  }, [vaultId]);
-
-  const loadShareLinks = async () => {
-    try {
-      const { data, error } = await vaultShareLinks.getVaultShareLinks(vaultId);
-      if (error) {
-        toast({
-          title: 'Failed to load share links',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        setShareLinks(data || []);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to load share links',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onSubmit = async (data: ShareLinkFormData) => {
     setSubmitting(true);
-    try {
-      const linkData: any = { vault_id: vaultId };
-      
-      if (data.has_expiry && data.expires_at) {
-        linkData.expires_at = new Date(data.expires_at).toISOString();
-      }
-      
-      if (data.has_view_limit && data.max_views) {
-        linkData.max_views = data.max_views;
-      }
-      
-      if (data.has_passcode && data.passcode) {
-        linkData.passcode = data.passcode;
-      }
-
-      const { data: shareLink, error } = await vaultShareLinks.createShareLink(linkData);
-
-      if (error) {
-        toast({
-          title: 'Failed to create share link',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Share link created',
-          description: 'The share link has been created successfully'
-        });
-        form.reset();
-        setDialogOpen(false);
-        loadShareLinks();
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to create share link',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    } finally {
-      setSubmitting(false);
+    const linkData: any = { vault_id: vaultId };
+    
+    if (data.has_expiry && data.expires_at) {
+      linkData.expires_at = new Date(data.expires_at).toISOString();
     }
+    
+    if (data.has_view_limit && data.max_views) {
+      linkData.max_views = data.max_views;
+    }
+    
+    if (data.has_passcode && data.passcode) {
+      linkData.passcode = data.passcode;
+    }
+
+    const result = await createShareLink(linkData);
+    if (result.success) {
+      form.reset();
+      setDialogOpen(false);
+    }
+    setSubmitting(false);
   };
 
   const handleRevoke = async (token: string) => {
-    try {
-      const { error } = await vaultShareLinks.revokeShareLink(token);
-      if (error) {
-        toast({
-          title: 'Failed to revoke share link',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Share link revoked',
-          description: 'The share link has been revoked'
-        });
-        loadShareLinks();
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Failed to revoke share link',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    }
+    await revokeShareLink(token);
   };
 
   const copyShareLink = (token: string) => {
@@ -378,8 +308,8 @@ export function VaultShareLinksTab({ vaultId, canManage }: VaultShareLinksTabPro
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
+                       <Button
+                        variant="destructive"
                         size="sm"
                         onClick={() => handleRevoke(link.token)}
                       >

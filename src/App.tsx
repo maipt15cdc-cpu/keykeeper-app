@@ -35,7 +35,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     if (!loading) {
       if (!user) {
         navigate('/login');
-      } else if (!profile) {
+      } else if (user && !profile) {
         navigate('/complete-profile');
       }
     }
@@ -51,6 +51,31 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user || !profile) {
     return null;
+  }
+
+  return <>{children}</>;
+}
+
+function CompleteProfileRoute({ children }: { children: React.ReactNode }) {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate('/login');
+      } else if (user && profile) {
+        navigate('/dashboard');
+      }
+    }
+  }, [user, profile, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return <>{children}</>;
@@ -90,7 +115,7 @@ const App = () => (
             <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
             <Route path="/forgot-password" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/complete-profile" element={<CompleteProfileRoute><CompleteProfile /></CompleteProfileRoute>} />
             
             {/* Public routes */}
             <Route path="/invitations/accept" element={<InvitationAccept />} />
