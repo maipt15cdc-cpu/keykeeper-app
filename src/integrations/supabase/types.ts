@@ -65,7 +65,7 @@ export type Database = {
       shared_links: {
         Row: {
           created_at: string | null
-          encrypted_data: Json | null
+          encrypted_data: Json
           expires_at: string | null
           max_views: number | null
           passcode_hash: string | null
@@ -75,7 +75,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          encrypted_data?: Json | null
+          encrypted_data: Json
           expires_at?: string | null
           max_views?: number | null
           passcode_hash?: string | null
@@ -85,7 +85,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          encrypted_data?: Json | null
+          encrypted_data?: Json
           expires_at?: string | null
           max_views?: number | null
           passcode_hash?: string | null
@@ -110,8 +110,8 @@ export type Database = {
           email: string
           expires_at: string | null
           id: string
-          role: string
-          token: string
+          role: string | null
+          token: string | null
           vault_id: string | null
         }
         Insert: {
@@ -120,8 +120,8 @@ export type Database = {
           email: string
           expires_at?: string | null
           id?: string
-          role: string
-          token: string
+          role?: string | null
+          token?: string | null
           vault_id?: string | null
         }
         Update: {
@@ -130,8 +130,8 @@ export type Database = {
           email?: string
           expires_at?: string | null
           id?: string
-          role?: string
-          token?: string
+          role?: string | null
+          token?: string | null
           vault_id?: string | null
         }
         Relationships: [
@@ -183,13 +183,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vault_items_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "vault_items_vault_id_fkey"
             columns: ["vault_id"]
             isOneToOne: false
@@ -201,30 +194,23 @@ export type Database = {
       vault_members: {
         Row: {
           joined_at: string | null
-          role: string
+          role: string | null
           user_id: string
           vault_id: string
         }
         Insert: {
           joined_at?: string | null
-          role: string
+          role?: string | null
           user_id: string
           vault_id: string
         }
         Update: {
           joined_at?: string | null
-          role?: string
+          role?: string | null
           user_id?: string
           vault_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "vault_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "vault_members_vault_id_fkey"
             columns: ["vault_id"]
@@ -240,7 +226,7 @@ export type Database = {
           id: string
           name: string
           owner_id: string | null
-          type: string
+          type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -248,7 +234,7 @@ export type Database = {
           id?: string
           name: string
           owner_id?: string | null
-          type: string
+          type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -256,18 +242,10 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string | null
-          type?: string
+          type?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "vaults_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
